@@ -1,8 +1,8 @@
 #!/bin/bash
 
-if [[ `id -u` -eq 0 ]]; then
-	echo "Try again, not as root."
-	exit 1
+if [[ $(id -u) -eq 0 ]]; then
+  echo "Try again, not as root."
+  exit 1
 fi
 
 
@@ -138,10 +138,10 @@ brew_setup_update() {
 brew_packages_install() {
   echo "--- Install tools with brew"
   for PKG in "${BREW_PKGS[@]}"; do
-    if [[ ! $(brew list | grep $PKG) ]]; then
+    if ! brew list | grep -q $PKG; then
       brew install $PKG
     else
-     echo "$PKG present"
+      echo "$PKG present"
     fi
   done
 
@@ -161,10 +161,10 @@ brew_cask_setup_update() {
 brew_cask_packages_install() {
   echo "--- Install tools with brew-cask"
   for PKG in "${BREW_CASK_PKGS[@]}"; do
-    if [[ ! $(brew cask list | grep $PKG) ]]; then
+    if ! brew cask list | grep -q $PKG; then
       brew cask install $PKG
     else
-     echo "$PKG present"
+      echo "$PKG present"
     fi
   done
 
@@ -187,7 +187,7 @@ python_libraries_install() {
     if [[ ! $(pip show $PKG) ]]; then
         echo "--- Installing $PKG"
         pip install $PKG
-    elif [[ $(pip list --format=legacy --outdated | grep -v latest | grep $PKG) ]]; then
+    elif pip list --format=legacy --outdated | grep -v latest | grep -q $PKG; then
         echo "--- Upgrading $PKG"
         pip install $PKG --upgrade
     fi
@@ -228,7 +228,7 @@ rvm_install() {
     rvm_common
   else
     export RVM_REMOTE_VERSION="$(curl  https://raw.githubusercontent.com/rvm/rvm/master/VERSION)"
-    if [[ $RVM_REMOTE_VERSION != $RVM_VERSION ]]; then
+    if [[ $RVM_REMOTE_VERSION != "$RVM_VERSION" ]]; then
       echo "--- Updating rvm."
       rvm get stable
       rvm_common
@@ -242,7 +242,7 @@ rvm_install() {
 rubies_install() {
   echo "--- Install rubies with rvm"
   for RUBY in "${RUBIES[@]}"; do
-    if [[ ! $(rvm list | grep $RUBY) ]]; then
+    if ! rvm list | grep -q $RUBY; then
       rvm install $RUBY
     else
       echo "--- ruby version $RUBY is present. Skipping."
@@ -262,7 +262,7 @@ common_rubygems_install() {
         echo "--- $G already installed. Skipping."
       else
         echo "--- Installing $G"
-        rvm $R do gem install $G
+        rvm $R 'do' gem install $G
       fi
     done
   done
@@ -349,7 +349,7 @@ system_info() {
 
   echo " --- Set up system-info"
   git clone https://github.com/travis-ci/system-info.git
-  cd system-info
+  cd system-info || return
   git reset --hard v2.0.3
   rvm use ruby-2.3.5 # some of the pinned dependencies don't work on 2.4.x
   bundle install
@@ -372,12 +372,12 @@ bootstrap() {
   echo "--- Let's bootstrap this macOS"
 
   echo "--- Some of what we'll be installing:"
-  echo "--- * Rubies: ${RUBIES[@]}"
-  echo "--- * brew pkgs: ${BREW_PKGS[@]}"
-  echo "--- * brew-cask pkgs: ${BREW_CASK_PKGS[@]}"
-  echo "--- * node versions: ${NODE_VERSIONS[@]}"
-  echo "--- * nvm version: ${NVM_VERSION[@]}"
-  echo "--- * rvm version: ${RVM_VERSION[@]}"
+  echo "--- * Rubies: ${RUBIES[*]}"
+  echo "--- * brew pkgs: ${BREW_PKGS[*]}"
+  echo "--- * brew-cask pkgs: ${BREW_CASK_PKGS[*]}"
+  echo "--- * node versions: ${NODE_VERSIONS[*]}"
+  echo "--- * nvm version: ${NVM_VERSION[*]}"
+  echo "--- * rvm version: ${RVM_VERSION[*]}"
 
   macos_system_prefs_setup
   travis_ssh_key_setup
